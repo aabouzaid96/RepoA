@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import AddUserView, sample_view
+from RepoA.add_users.views import AddUserView, sample_view
 
 urlpatterns = [
     path('add-user/', AddUserView.as_view(), name='add-user'),
