@@ -8,8 +8,8 @@ setup(
     install_requires=[
         "django>=3.2"  # Specify Django version compatibility
     ],
-    author="Your Name",
-    author_email="your_email@example.com",
+    author="abouzaid",
+    author_email="aabouzaid96@gmail.com",
     description="A reusable Django app",
     url="http://example.com/django-app-a",
     classifiers=[
