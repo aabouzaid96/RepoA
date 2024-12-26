@@ -1,6 +1,6 @@
-name: Deploy RepoA to Server
+name: Deploy RepoA to MainRepo
 
-# Trigger on push to the main branch
+# Trigger the workflow on push to the main branch
 on:
   push:
     branches:
@@ -11,51 +11,59 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout the repository
-      - name: Checkout Code
+      # Step 1: Checkout the RepoA code
+      - name: Checkout RepoA
         uses: actions/checkout@v3
 
-      # Set up Python
+      # Step 2: Set up Python
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: 3.11
 
-      # Install dependencies
-      - name: Install Dependencies
+      # Step 3: Build RepoA as a dist package
+      - name: Build RepoA
         run: |
           python -m pip install --upgrade pip setuptools wheel
-          pip install -r requirements.txt
+          python setup.py sdist
 
-      # Run your build or tests (Optional)
-      - name: Run Tests (Optional)
+      # Step 4: Add SSH Key for Deployment
+      - name: Add SSH Key
         run: |
-          pytest  # Replace with your test framework
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
 
-      # SSH into the server and deploy
-      - name: Deploy to Server
+      # Step 5: Deploy RepoA to the Server
+      - name: Deploy RepoA
         run: |
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ secrets.AWS_EC2_IP }} << 'EOF'
             set -e
 
-            # Navigate to RepoA directory on the server
-            cd /home/ubuntu/RepoA
+            # Navigate to the MainRepo directory on the server
+            cd /home/ubuntu/MainRepo
 
-            # Pull the latest changes
+            # Pull the latest changes for MainRepo
             git reset --hard
             git pull origin main
+
+            # Sync the latest RepoA dist package
+            mkdir -p /home/ubuntu/RepoA/dist
+            rm -rf /home/ubuntu/RepoA/dist/*
+            scp ./dist/*.tar.gz ubuntu@${{ secrets.AWS_EC2_IP }}:/home/ubuntu/RepoA/dist/
 
             # Activate the virtual environment
             source /path/to/venv/bin/activate
 
-            # Install RepoA
-            python setup.py install
+            # Install the updated RepoA package
+            pip install /home/ubuntu/RepoA/dist/*.tar.gz
 
-            # Restart any services or apply changes
-            sudo systemctl restart some-service  # Replace with the actual service
+            # Restart the MainRepo-related services
+            sudo systemctl restart gunicorn
+            sudo systemctl restart nginx
           EOF
 
-      # Debugging step to verify SSH connection and actions
+      # Debugging Step
       - name: Debug SSH Connection
         run: |
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ secrets.AWS_EC2_IP }} echo "SSH successful"
