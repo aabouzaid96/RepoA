@@ -57,10 +57,19 @@ jobs:
             set -e
             # Navigate to the MainRepo directory
             cd /home/ubuntu/MainRepo
-
+      
             # Pull the latest changes for MainRepo
             git reset --hard
             git pull origin main
-
+      
             # Activate the virtual environment
-            source /path/to/venv/bi
+            source /home/ubuntu/MainRepo/venv/bin/activate
+      
+            # Install the updated RepoA package
+            pip install /home/ubuntu/RepoA/dist/*.tar.gz
+      
+            # Restart the MainRepo-related services
+            sudo systemctl restart gunicorn
+            sudo systemctl restart nginx
+          EOF
+
