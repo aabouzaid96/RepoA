@@ -1,4 +1,4 @@
-name: Deploy RepoA to MainRepo
+name: Deploy RepoA to Server
 
 # Trigger the workflow on push to the main branch
 on:
@@ -26,6 +26,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip setuptools wheel
           python setup.py sdist
+          ls ./dist  # Debug to ensure the dist package is created
 
       # Step 4: Add SSH Key for Deployment
       - name: Add SSH Key
@@ -34,32 +35,32 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
 
-      # Step 5: Deploy RepoA to the Server
-      - name: Deploy RepoA
+      # Step 5: Prepare the EC2 Server for Deployment
+      - name: Prepare Server
         run: |
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ secrets.AWS_EC2_IP }} << 'EOF'
             set -e
-      
-            # Navigate to the MainRepo directory on the server
+            # Ensure RepoA dist directory exists and is clean
+            mkdir -p /home/ubuntu/RepoA/dist
+            rm -rf /home/ubuntu/RepoA/dist/*
+          EOF
+
+      # Step 6: Copy the Dist Package to the EC2 Server
+      - name: Copy Dist Package to Server
+        run: |
+          scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ./dist/*.tar.gz ubuntu@${{ secrets.AWS_EC2_IP }}:/home/ubuntu/RepoA/dist/
+
+      # Step 7: Install the Dist Package on the Server
+      - name: Install RepoA on Server
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ secrets.AWS_EC2_IP }} << 'EOF'
+            set -e
+            # Navigate to the MainRepo directory
             cd /home/ubuntu/MainRepo
-      
+
             # Pull the latest changes for MainRepo
             git reset --hard
             git pull origin main
-      
-            # Sync the latest RepoA dist package
-            mkdir -p /home/ubuntu/RepoA/dist
-            rm -rf /home/ubuntu/RepoA/dist/*
-            scp -o StrictHostKeyChecking=no ./dist/*.tar.gz ubuntu@${{ secrets.AWS_EC2_IP }}:/home/ubuntu/RepoA/dist/
-      
-            # Activate the virtual environment
-            source /path/to/venv/bin/activate
-      
-            # Install the updated RepoA package
-            pip install /home/ubuntu/RepoA/dist/*.tar.gz
-      
-            # Restart the MainRepo-related services
-            sudo systemctl restart gunicorn
-            sudo systemctl restart nginx
-          EOF
 
+            # Activate the virtual environment
+            source /path/to/venv/bi
