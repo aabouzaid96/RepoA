@@ -39,31 +39,27 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ secrets.AWS_EC2_IP }} << 'EOF'
             set -e
-
+      
             # Navigate to the MainRepo directory on the server
             cd /home/ubuntu/MainRepo
-
+      
             # Pull the latest changes for MainRepo
             git reset --hard
             git pull origin main
-
+      
             # Sync the latest RepoA dist package
             mkdir -p /home/ubuntu/RepoA/dist
             rm -rf /home/ubuntu/RepoA/dist/*
-            scp ./dist/*.tar.gz ubuntu@${{ secrets.AWS_EC2_IP }}:/home/ubuntu/RepoA/dist/
-
+            scp -o StrictHostKeyChecking=no ./dist/*.tar.gz ubuntu@${{ secrets.AWS_EC2_IP }}:/home/ubuntu/RepoA/dist/
+      
             # Activate the virtual environment
             source /path/to/venv/bin/activate
-
+      
             # Install the updated RepoA package
             pip install /home/ubuntu/RepoA/dist/*.tar.gz
-
+      
             # Restart the MainRepo-related services
             sudo systemctl restart gunicorn
             sudo systemctl restart nginx
           EOF
 
-      # Debugging Step
-      - name: Debug SSH Connection
-        run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ secrets.AWS_EC2_IP }} echo "SSH successful"
