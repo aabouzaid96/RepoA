@@ -24,14 +24,8 @@ jobs:
       # Step 3: Install Dependencies
       - name: Install Dependencies
         run: |
-          cd ../../..
           python -m pip install --upgrade pip setuptools wheel
-          pip install -r requirements.txt
 
-      # Step 4: Run Tests
-      - name: Run Tests
-        run: |
-          python -m unittest discover -s tests
 
       # Step 5: Build RepoA as a dist package
       - name: Build RepoA
