@@ -1,0 +1,39 @@
+name: Test and Build RepoA (Non-Main Branches)
+
+# Trigger the workflow on push to all branches except main
+on:
+  push:
+    branches-ignore:
+      - main
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the RepoA code
+      - name: Checkout RepoA
+        uses: actions/checkout@v3
+
+      # Step 2: Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+
+      # Step 3: Install Dependencies
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -r requirements.txt
+
+      # Step 4: Run Tests
+      - name: Run Tests
+        run: |
+          python -m unittest discover -s tests
+
+      # Step 5: Build RepoA as a dist package
+      - name: Build RepoA
+        run: |
+          python setup.py sdist
+          ls ./dist  # Debug to ensure the dist package is created
