@@ -60,7 +60,7 @@ jobs:
       
             # Pull the latest changes for MainRepo
             git reset --hard
-            git pull origin main
+            git pull https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/aabouzaid96/MainRepo.git
       
             # Activate the virtual environment
             source /home/ubuntu/MainRepo/venv/bin/activate
