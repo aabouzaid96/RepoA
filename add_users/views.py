@@ -20,4 +20,4 @@ class AddUserView(APIView):
 
 
 def sample_view(request):
-    return JsonResponse({"message": "Hello from RepoA - Change 3 Friday"})
+    return JsonResponse({"message": "Hello from RepoA - Demo Day Monday 1"})
